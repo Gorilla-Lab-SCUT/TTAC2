@@ -32,7 +32,7 @@ The code is released in the [imagenet](imagenet) folder.
 If you find our work useful in your research, please consider citing:
 
 ```bibtex
-@ARTICLE{su2023revisiting,
+@ARTICLE{su2024revisiting,
   author={Su, Yongyi and Xu, Xun and Li, Tianrui and Jia, Kui},
   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
   title={Revisiting Realistic Test-Time Training: Sequential Inference and Adaptation by Anchored Clustering Regularized Self-Training}, 
