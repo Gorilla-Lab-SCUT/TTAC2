@@ -1,6 +1,6 @@
-# TTAC on ImageNet
+# TTAC++ on ImageNet
 
-TTAC on ImageNet under common corruptions.
+TTAC++ on ImageNet under common corruptions.
 
 ### Requirements
 
@@ -52,10 +52,10 @@ Here, we use the pretrain model provided by torchvision.
 
 We mainly conduct our experiments under the sTTT (N-O) protocol, which is more realistic and challenging.
 
-- run TTAC on ImageNet-C under the sTTT (N-O) protocol.
+- run TTAC++ on ImageNet-C under the sTTT (**N-O**) protocol.
   
     ```
-    bash scripts/run_ttac_no.sh
+    bash scripts/run_ttac2_no.sh
     ```
 
     The following results are yielded by the above script (classification errors) under the snow corruption:
@@ -64,15 +64,14 @@ We mainly conduct our experiments under the sTTT (N-O) protocol, which is more r
     |:------:|:----------:|
     |  Test  |   82.22    |
     |  TTAC  |   44.56     |
+    |  TTAC++ |  43.40     |
 
-- run TTAC on ImageNet-C under the N-O without queue protocol.
+- run TTAC on ImageNet-C under the **N-O-SF** without any source information including source statistics collected from training set.
   
-    In the sTTT protocol, we employ a sample queue (for all comparing methods), storing past samples, to aid model adaptation to enhance stability and improve accuracy. Obviously, it would bring more computing cost. 
-
-    Therefore, we provide the version of TTAC without queue which can be utilized in cases where efficiency is important.
+    **Note**: In this work, we endeavor to mitigate the dependence of previous work on source statistics from training set. We derive the approximated source domain distribution via gradient descent as implemented in `utils/find_prototypes.py`.
 
     ```
-    bash scripts/run_ttac_no_without_queue.sh
+    bash scripts/run_ttac2_no_sf.sh
     ```
 
     The following results are yielded by the above script (classification errors) under the snow corruption:
@@ -80,4 +79,4 @@ We mainly conduct our experiments under the sTTT (N-O) protocol, which is more r
     | Method | ImageNet-C (Level 5) |
     |:------:|:----------:|
     |  Test  |   82.22    |
-    |  TTAC  |   46.64     |
+    |  TTAC++  |   43.60     |

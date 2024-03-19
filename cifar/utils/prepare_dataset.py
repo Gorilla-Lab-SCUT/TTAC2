@@ -66,7 +66,9 @@ def prepare_transforms(dataset):
         normalize
     ])
 
-    return tr_transforms, te_transforms, simclr_transforms
+    fixmatch_transforms = FixMatchTransform(mean, std)
+
+    return tr_transforms, te_transforms, simclr_transforms, fixmatch_transforms
 
 class TwoCropTransform:
     """Create two crops of the same image"""
@@ -76,6 +78,39 @@ class TwoCropTransform:
 
     def __call__(self, x):
         return [self.transform(x), self.transform(x), self.te_transform(x)]
+
+class FixMatchTransform:
+    def __init__(self, mean, std):
+        self.weak = transforms.Compose([
+            # transforms.RandomResizedCrop(size=32, scale=(0.2, 1.)),
+            transforms.RandomHorizontalFlip(),
+                                  ])
+        self.strong = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=32,
+                                  padding=int(32*0.125),
+                                  padding_mode='reflect'),
+            # transforms.RandomResizedCrop(size=32, scale=(0.2, 1.)),
+            RandAugmentMC(n=2, m=10)])
+        
+        self.simclr_transforms = transforms.Compose([
+            transforms.RandomResizedCrop(size=32, scale=(0.2, 1.)),     # TODO: modify the hard-coded size
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomApply([
+                transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)
+            ], p=0.8),
+            transforms.RandomGrayscale(p=0.2),
+        ])
+
+        self.normalize = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std)])
+
+    def __call__(self, x):
+        weak = self.weak(x)
+        strong = self.strong(x)
+        simclr1 = self.simclr_transforms(x)
+        return [self.normalize(weak), self.normalize(strong), self.normalize(x), self.normalize(simclr1)]
 
 # -------------------------
 
@@ -162,7 +197,7 @@ def prepare_mix_corruption(args, num_mix, foldername):
 
 def prepare_test_data(args, ttt=False, num_sample=None, align=False):
 
-    tr_transforms, te_transforms, simclr_transforms = prepare_transforms(args.dataset)
+    tr_transforms, te_transforms, simclr_transforms = prepare_transforms(args.dataset)[:3]
 
     if args.dataset == 'cifar10':
 
@@ -175,6 +210,13 @@ def prepare_test_data(args, ttt=False, num_sample=None, align=False):
             print('Test on %s level %d' %(args.corruption, args.level))
             teset_raw = np.load(args.dataroot + '/CIFAR-10-C/%s.npy' %(args.corruption))
             teset_raw = teset_raw[(args.level-1)*tesize: args.level*tesize]
+            teset = CIFAR10(root=args.dataroot,
+                            train=False, download=True, transform=te_transforms)
+            teset.data = teset_raw
+        
+        elif args.corruption == "attack":
+            print('Test on %s' %(args.corruption))
+            teset_raw = np.load(args.dataroot + '/CIFAR-10-Attack/pgd.npy')
             teset = CIFAR10(root=args.dataroot,
                             train=False, download=True, transform=te_transforms)
             teset.data = teset_raw
@@ -251,19 +293,28 @@ def prepare_test_data(args, ttt=False, num_sample=None, align=False):
 def prepare_train_data(args, num_sample=None):
     print('Preparing data...')
     
-    tr_transforms, te_transforms, simclr_transforms = prepare_transforms(args.dataset)
+    tr_transforms, te_transforms, simclr_transforms, fixmatch_transforms = prepare_transforms(args.dataset)
 
     if args.dataset == 'cifar10':
 
-        if hasattr(args, 'ssl') and args.ssl == 'contrastive':
-            trset = CIFAR10(root=args.dataroot,
-                            train=False, download=True,
-                            transform=TwoCropTransform(simclr_transforms, te_transforms))
+        if hasattr(args, 'ssl') and (args.ssl == 'contrastive' or args.ssl == "fixmatch"):
+            if args.ssl == 'contrastive':
+                trset = CIFAR10(root=args.dataroot,
+                                train=False, download=True,
+                                transform=TwoCropTransform(simclr_transforms, te_transforms))
+            else:
+                trset = CIFAR10(root=args.dataroot,
+                                train=False, download=True,
+                                transform=fixmatch_transforms)
             if hasattr(args, 'corruption') and args.corruption in common_corruptions:
                 print('Contrastive on %s level %d' %(args.corruption, args.level))
                 tesize = 10000
                 trset_raw = np.load(args.dataroot + '/CIFAR-10-C/%s.npy' %(args.corruption))
                 trset_raw = trset_raw[(args.level-1)*tesize: args.level*tesize]   
+                trset.data = trset_raw
+            elif args.corruption == "attack":
+                print('Contrastive on %s' %(args.corruption))
+                trset_raw = np.load(args.dataroot + '/CIFAR-10-Attack/pgd.npy')
                 trset.data = trset_raw
             elif hasattr(args, 'corruption') and args.corruption == 'cifar_new':
                 from utils.cifar_new import CIFAR_New
@@ -286,10 +337,15 @@ def prepare_train_data(args, num_sample=None):
             print('Cifar10 training set')
 
     elif args.dataset == 'cifar100':
-        if hasattr(args, 'ssl') and args.ssl == 'contrastive':
-            trset = torchvision.datasets.CIFAR100(root=args.dataroot,
-                                         train=True, download=True,
-                                         transform=TwoCropTransform(simclr_transforms, te_transforms))            
+        if hasattr(args, 'ssl') and (args.ssl == 'contrastive' or args.ssl == "fixmatch"):
+            if args.ssl == "contrastive":
+                trset = CIFAR100(root=args.dataroot,
+                                train=False, download=True,
+                                transform=TwoCropTransform(simclr_transforms, te_transforms))            
+            else:
+                trset = CIFAR100(root=args.dataroot,
+                                train=False, download=True,
+                                transform=fixmatch_transforms)            
             if hasattr(args, 'corruption') and args.corruption in common_corruptions:
                 print('Contrastive on %s level %d' %(args.corruption, args.level))
                 tesize = 10000

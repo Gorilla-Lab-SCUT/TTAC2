@@ -1,20 +1,22 @@
-# TTAC
+# TTAC++
 
-This repository is an official implementation for our NeurIPS 2022 paper [\[Arxiv\]](https://arxiv.org/abs/2206.02721) [\[Openreview\]](https://openreview.net/forum?id=W-_4hgRkwb).
+This repository is an official implementation for our TPAMI paper [\[Arxiv\]](https://arxiv.org/abs/2303.10856) [\[IEEE Xplore\]](https://ieeexplore.ieee.org/abstract/document/10452869).
 
-We implement a plug and play version of TTAC without queue on another work [repo](https://github.com/Gorilla-Lab-SCUT/TRIBE/blob/master/core/adapter/ttac.py).
+This repo is built upon our previous work [TTAC](https://github.com/Gorilla-Lab-SCUT/TTAC) accepted by NeurIPS 2022.
 
-## Revisiting Realistic Test-Time Training: Sequential Inference and Adaptation by Anchored Clustering
+## Revisiting Realistic Test-Time Training: Sequential Inference and Adaptation by Anchored Clustering Regularizad Self-Training
 
-**Yongyi Su<sup>1</sup>** &nbsp; **Xun Xu<sup>21</sup>** &nbsp; **Kui Jia<sup>13</sup>**
+**Yongyi Su<sup>1</sup>** &nbsp; **Xun Xu<sup>2</sup>** &nbsp; **Tianrui Li<sup>3</sup>** &nbsp; **Kui Jia<sup>1</sup>**
 <br>
-<sup>1</sup>South China University of Technology &nbsp; <sup>2</sup>Institute for Infocomm Research &nbsp; <sup>3</sup>Peng Cheng Laboratory
+<sup>1</sup>South China University of Technology &nbsp; <br>
+<sup>2</sup>Institute for Infocomm Research, A*STAR &nbsp; <br>
+<sup>3</sup>Southwest Jiaotong University
 <br>
 
 
 ### Overview
 
-![](./imgs/Overview_v1.png)
+![](./imgs/Overview_TTAC2.png)
 
 
 ### CIFAR10/100
@@ -30,13 +32,14 @@ The code is released in the [imagenet](imagenet) folder.
 If you find our work useful in your research, please consider citing:
 
 ```bibtex
-@inproceedings{
-  su2022revisiting,
-  title={Revisiting Realistic Test-Time Training: Sequential Inference and Adaptation by Anchored Clustering},
-  author={Yongyi Su and Xun Xu and Kui Jia},
-  booktitle={Advances in Neural Information Processing Systems},
-  editor={Alice H. Oh and Alekh Agarwal and Danielle Belgrave and Kyunghyun Cho},
-  year={2022},
-  url={https://openreview.net/forum?id=W-_4hgRkwb}
+@ARTICLE{su2023revisiting,
+  author={Su, Yongyi and Xu, Xun and Li, Tianrui and Jia, Kui},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
+  title={Revisiting Realistic Test-Time Training: Sequential Inference and Adaptation by Anchored Clustering Regularized Self-Training}, 
+  year={2024},
+  volume={},
+  number={},
+  pages={1-16},
+  doi={10.1109/TPAMI.2024.3370963}
 }
 ```

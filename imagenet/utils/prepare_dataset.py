@@ -4,6 +4,7 @@ import numpy as np
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageNet
 import os
+from .augmentation import *
 
 def prepare_transforms():
     train_transform = transforms.Compose([
@@ -22,7 +23,36 @@ def prepare_transforms():
         transforms.ToTensor(),
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
-    return train_transform, val_transform, val_corrupt_transform
+    fixmatch_transform = FixMatchTransform((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    return train_transform, val_transform, val_corrupt_transform, fixmatch_transform
+
+
+class FixMatchTransform:
+    def __init__(self, mean, std):
+        self.weak = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.RandomCrop(size=224,
+                                  padding=int(224*0.125),
+                                  padding_mode='reflect'),
+            transforms.RandomHorizontalFlip()
+        ])
+        self.strong = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=224,
+                                  padding=int(224*0.125),
+                                  padding_mode='reflect'),
+            RandAugmentMC(n=2, m=10)])
+
+        self.normalize = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std)])
+
+    def __call__(self, x):
+        weak = self.weak(x)
+        strong = self.strong(x)
+        return [self.normalize(weak), self.normalize(strong), self.normalize(x)]
+
 
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2**32
@@ -59,7 +89,10 @@ class ImageNetCorruption(ImageNet):
         if self.transform is not None:
             img = self.transform(img)
         if self.is_carry_index:
-            img = [img, index]
+            if type(img) == list:
+                img.append(index)
+            else:
+                img = [img, index]
         return img, target
     
     def __len__(self):
